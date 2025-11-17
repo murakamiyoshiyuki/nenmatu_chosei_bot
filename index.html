@@ -86,12 +86,6 @@
       <!-- エラーメッセージ -->
       <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
       </div>
-
-      <!-- サインアップリンク -->
-      <div class="text-center text-sm text-gray-600 mt-4">
-        アカウントをお持ちでない場合は、
-        <a href="#" id="signupLink" class="text-indigo-600 hover:text-indigo-800 font-semibold">新規登録</a>
-      </div>
     </div>
 
     <!-- 機能説明 -->
@@ -190,12 +184,6 @@
         loginButton.disabled = false;
         loginButton.textContent = 'ログイン';
       });
-    });
-
-    // サインアップリンク
-    document.getElementById('signupLink').addEventListener('click', function(e) {
-      e.preventDefault();
-      alert('新規登録機能は管理者にお問い合わせください');
     });
 
     // Enterキーでログイン

@@ -1,5 +1,9 @@
 {
   "version": 2,
+  "buildCommand": null,
+  "framework": null,
+  "installCommand": "npm install",
+  "outputDirectory": ".",
   "headers": [
     {
       "source": "/api/(.*)",
@@ -17,6 +21,12 @@
           "value": "Content-Type"
         }
       ]
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/index.html"
     }
   ]
 }

@@ -1,0 +1,34 @@
+# Node modules (Vercelが自動でインストールするため除外)
+node_modules
+
+# 環境変数ファイル（Vercelダッシュボードで設定するため除外）
+.env
+.env.local
+.env.*.local
+
+# 開発用ファイル
+server.js
+nul
+
+# ドキュメント
+SESSION_LOG.md
+NEXT_STEPS.md
+DEPLOYMENT_LOG.md
+QUICKSTART.md
+
+# Git関連
+.git
+.gitignore
+.gitattributes
+
+# Claude設定
+.claude
+
+# サンプル・例示ファイル
+.env.example
+config.js.example
+chat-simple.html
+
+# その他
+*.log
+.DS_Store

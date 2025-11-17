@@ -8,6 +8,9 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- 環境変数設定 -->
+  <script src="config.js"></script>
+
   <!-- Memberstack SDK (CDN ESM版) -->
   <script type="importmap">
     {
@@ -121,9 +124,10 @@
 
     // Memberstack初期化
     console.log('Initializing Memberstack with npm package...');
+    console.log('Using Public Key:', window.ENV.MEMBERSTACK_PUBLIC_KEY);
 
     const memberstack = memberstackDOM.init({
-      publicKey: "pk_sb_bbb8fe9f7c9e2de2a3aa"
+      publicKey: window.ENV.MEMBERSTACK_PUBLIC_KEY
     });
 
     console.log('Memberstack initialized successfully');

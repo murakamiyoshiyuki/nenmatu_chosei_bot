@@ -1,9 +1,16 @@
 /**
- * Vercel Edge Function - OpenAI API プロキシ
+ * Vercel Edge Function - OpenAI API プロキシ + RAG統合
  *
  * このエンドポイントはフロントエンドからのリクエストを受け取り、
  * サーバーサイドでOpenAI APIを呼び出します（CORS回避 + APIキー保護）
+ *
+ * RAG機能：
+ * - ユーザーの質問をベクトル検索
+ * - Supabase Vector DBから関連PDFチャンクを取得
+ * - システムプロンプトに検索結果を追加して回答精度を向上
  */
+
+import { searchKnowledge } from '../lib/vector-search.js';
 
 export const config = {
   runtime: 'edge',
@@ -14,25 +21,45 @@ const SYSTEM_PROMPT = `あなたは「日本の年末調整専門コンサルタ
 
 【役割と責任】
 - 日本の税法・会計実務に準拠して、ユーザー（企業担当者・社員）の質問に正確で丁寧な回答を行います
-- わかりやすく、根拠を示した説明を心がけます
-- 回答の根拠には国税庁などの一次資料を引用します
-- 不確実な情報は「仮説」や「要確認」と明記します
+- 必ず根拠を示した説明を行い、推測の場合は明示します
 
-【参照資料】
-- 年末調整のしかた（令和6年分）
-- 年末調整Q&A（国税庁）
-- その他関連する税法・通達
+【情報参照の優先順位（厳格に守ること）】
+1. **Knowledge（アップロードされたPDF資料）** ← 最優先
+   - 年末調整のしかた（令和6年分）
+   - 年末調整Q&A（国税庁）
+   - この情報が提供された場合、必ずこれを最優先で参照すること
 
-【回答スタイル】
-1. 質問の要点を確認
-2. 法的根拠と実務上の取り扱いを説明
-3. 具体例や注意点を補足
-4. 必要に応じて参照先を提示
+2. **国税庁公式サイト** (https://www.nta.go.jp/)
+
+3. **政府関連一次資料**
+   - e-Gov法令検索
+   - 総務省、厚生労働省などの公式ドメイン
+
+4. **信頼性の高い会計ソフト会社**
+   - freee、マネーフォワード、弥生会計など
+
+5. **会計事務所・税理士法人の専門記事**
+
+6. **Web検索（最終手段）**
+   - 使用前に「一次資料を優先して確認します」と宣言
+   - 必ず信頼できる専門サイトを引用
+
+【回答形式（必須）】
+1. **根拠を必ず明示**
+   - PDFからの引用: 「📄 引用：年末調整のしかた p.15付近」
+   - 一次資料: 「🔗 参照：国税庁○○ページ」
+   - 根拠がない場合は明示的に「⚠️ 一般的な知識に基づく回答です」
+
+2. **不確実な情報は「要確認」と明記**
+   - 推測の場合: 「💭 推測：〜と考えられますが、要確認です」
+
+3. **最終的な判断は専門家に**
+   - 必ず「最終的な判断は税理士・税務署にご確認ください」と促す
 
 【注意事項】
-- 税務相談は最終的に税理士・税務署への確認を推奨
-- 個別具体的なケースについては一般論として回答
-- 不明確な場合は推測せず、確認が必要である旨を伝える`;
+- PDFの検索結果が提供された場合、必ずそれを最優先で参照すること
+- 根拠のない推測は絶対に行わないこと
+- 個別具体的なケースについては一般論として回答し、専門家への相談を促すこと`;
 
 export default async function handler(req) {
   // CORS preflight
@@ -89,9 +116,44 @@ export default async function handler(req) {
       );
     }
 
+    // RAG検索: ナレッジベースから関連情報を取得
+    let searchResults = [];
+    try {
+      console.log('[RAG] Searching knowledge base...');
+      searchResults = await searchKnowledge(message, 5, 0.6);
+      console.log(`[RAG] Found ${searchResults.length} relevant chunks`);
+    } catch (error) {
+      console.error('[RAG] Knowledge search failed:', error);
+      // RAG検索失敗時もエラーにせず、通常の回答を続行
+    }
+
+    // システムプロンプトを拡張（RAG検索結果を追加）
+    let enhancedPrompt = SYSTEM_PROMPT;
+
+    if (searchResults.length > 0) {
+      const knowledgeContext = searchResults.map((result, index) => {
+        return `[${index + 1}] 📄 出典: ${result.pdf_name}${result.pdf_year ? ` (${result.pdf_year})` : ''} p.${result.page_number || '?'}付近
+内容: ${result.text.substring(0, 500)}${result.text.length > 500 ? '...' : ''}
+類似度: ${(result.similarity * 100).toFixed(1)}%`;
+      }).join('\n\n');
+
+      enhancedPrompt = `${SYSTEM_PROMPT}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【検索されたPDF資料（最優先で参照すること）】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${knowledgeContext}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+上記の資料を最優先で参照して回答してください。
+回答には必ず「📄 引用：〜」の形式で出典を明記してください。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+    }
+
     // メッセージ履歴を構築
     const messages = [
-      { role: 'system', content: SYSTEM_PROMPT }
+      { role: 'system', content: enhancedPrompt }
     ];
 
     // 会話履歴を追加（最新5件まで）

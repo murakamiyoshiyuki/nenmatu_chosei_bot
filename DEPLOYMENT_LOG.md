@@ -116,7 +116,7 @@ git push
 | `OPENAI_MODEL` | `gpt-4o-mini` | Production, Preview, Development |
 | `SUPABASE_URL` | `https://wnmysqgroteyvjigebwg.supabase.co` | Production, Preview, Development |
 | `SUPABASE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndubXlzcWdyb3RleXZqaWdlYndnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3ODY5NDgsImV4cCI6MjA3ODM2Mjk0OH0.HmGJBLFSNQUX6WHATnJZLuBrAQA7hD-m7ICk5TejCFA` | Production, Preview, Development |
-| `MEMBERSTACK_PUBLIC_KEY` | `pk_sb_83529e9106c38e214b4b` | Production, Preview, Development |
+| `MEMBERSTACK_PUBLIC_KEY` | `pk_e15c36b2351879cf0875` | Production, Preview, Development |
 | `MAX_QUERIES_PER_MONTH` | `100` | Production, Preview, Development |
 
 各変数を追加後、**Add** をクリック
@@ -158,10 +158,10 @@ nenmatu_chosei_bot/
 
 ## 🔑 重要な情報まとめ
 
-### Memberstack（クライアント会計事務所アカウント）
-- Public Key: `pk_sb_83529e9106c38e214b4b`
-- Secret Key: `sk_sb_5c434410c9707a55320d`
-- モード: **Test Mode**（本番環境として使用）
+### Memberstack（テストモード）
+- App ID: `app_cmi2mk2e600230st1fly1z13ko`
+- Public Key: `pk_e15c36b2351879cf0875`
+- モード: **Test Mode**
 
 ### Supabase
 - URL: `https://wnmysqgroteyvjigebwg.supabase.co`

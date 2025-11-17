@@ -231,3 +231,157 @@ cat DEPLOYMENT_LOG.md
 ---
 
 **次回作業開始時は、上記の「次にやるべきこと」から続けてください。**
+
+---
+
+## 📅 2025-01-18: RAG（Retrieval-Augmented Generation）実装完了
+
+### 作業概要
+年末調整BOTにRAG機能を実装し、PDFナレッジベースから情報を検索してAIが回答できるようにしました。
+
+### 実装内容
+
+#### 新規作成ファイル
+1. **`supabase/vector-schema.sql`**
+   - PostgreSQL + pgvector拡張のスキーマ定義
+   - `knowledge_base`テーブル（PDF情報 + ベクトル埋め込み）
+   - IVFFlat インデックス（コサイン類似度検索用）
+   - `match_knowledge()` RPC関数（ベクトル検索）
+
+2. **`lib/vector-search.js`**
+   - `embedText(text)`: OpenAI text-embedding-3-smallでベクトル化
+   - `searchKnowledge(query, limit, threshold)`: 意味的検索実行
+   - `getKnowledgeStats()`: ナレッジベース統計取得
+
+3. **`scripts/pdf-processor.js`**
+   - `processPDF(pdfPath)`: PDF読み込み＆チャンク分割
+   - `saveChunksToSupabase(data, year)`: ベクトル化＆DB保存
+   - `deleteKnowledge(pdfName)`: PDF削除
+   - チャンクサイズ: 800文字、オーバーラップ: 100文字
+
+4. **`scripts/upload-knowledge.js`**
+   - PDFアップロードCLIツール
+   - コマンド: `node scripts/upload-knowledge.js <PDF_PATH> [YEAR]`
+   - 統計表示: `--stats`
+   - 削除: `--delete "filename.pdf"`
+
+5. **`RAG_SETUP.md`**
+   - 詳細なセットアップガイド（日本語）
+   - Supabaseスキーマ実行手順
+   - PDFアップロード方法
+   - トラブルシューティング
+   - 技術仕様
+
+#### 修正ファイル
+1. **`api/chat.js`**
+   - RAG検索統合（lines 119-151）
+   - `searchKnowledge()`を呼び出してPDFから関連情報を取得
+   - 検索結果をシステムプロンプトに追加
+   - 6段階情報優先順位システムプロンプト追加:
+     - Level 1: Knowledge（PDF資料）← 最優先
+     - Level 2: 国税庁公式サイト
+     - Level 3: 政府関連一次資料
+     - Level 4: 会計ソフト会社
+     - Level 5: 税理士法人記事
+     - Level 6: Web検索（最終手段）
+   - 引用強制: 「📄 引用：年末調整のしかた p.15付近」形式
+
+2. **`package.json`**
+   - 依存関係追加:
+     - `@supabase/supabase-js": "^2.39.0"`
+     - `pdf-parse": "^1.1.1"`
+
+3. **`.env.example`**
+   - `OPENAI_EMBEDDING_MODEL=text-embedding-3-small` 追加
+
+### 技術仕様
+
+#### ベクトル検索
+- **埋め込みモデル**: OpenAI text-embedding-3-small (1536次元)
+- **類似度指標**: コサイン類似度
+- **インデックス**: IVFFlat (lists = 100)
+- **デフォルト閾値**: 0.6 (60%以上の類似度)
+- **デフォルト取得数**: 5チャンク
+
+#### テキスト処理
+- **チャンクサイズ**: 800文字
+- **オーバーラップ**: 100文字
+- **レート制限**: 各チャンク間200ms待機
+
+#### Graceful Fallback
+- RAG検索失敗時もエラーにせず通常回答を継続
+- 検索結果0件の場合も正常動作
+
+### GitHubコミット
+```bash
+Commit: 3218306
+Message: Implement RAG (Retrieval-Augmented Generation) system for year-end tax adjustment bot
+Files: 8 files changed, 1127 insertions(+), 18 deletions(-)
+```
+
+### 次回アクションアイテム（ユーザー作業）
+
+#### 1. Supabaseスキーマ実行
+```bash
+# Supabase Dashboard → SQL Editor
+# supabase/vector-schema.sql の内容をコピー＆実行
+```
+
+#### 2. PDFファイル準備とアップロード
+```bash
+# プロジェクトルートに移動
+cd "C:\Users\info\Desktop\yoshiyuki\古事記project\VIBE CODING\nenmatu_chosei_bot"
+
+# pdfsディレクトリ作成
+mkdir pdfs
+
+# PDFファイルを pdfs/ に配置後
+npm install  # 新しい依存関係をインストール
+
+# PDFアップロード
+node scripts/upload-knowledge.js ./pdfs/年末調整のしかた.pdf "令和6年分"
+node scripts/upload-knowledge.js ./pdfs/年末調整Q&A.pdf "令和6年分"
+
+# 統計確認
+node scripts/upload-knowledge.js --stats
+```
+
+#### 3. Vercel環境変数追加
+Vercel Dashboard → Settings → Environment Variables で追加:
+
+| Variable Name | Value |
+|--------------|-------|
+| `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` |
+
+#### 4. 動作確認
+**ローカル環境:**
+```bash
+npm run dev
+# http://localhost:3000
+# ブラウザコンソール（F12）で以下を確認:
+# [RAG] Searching knowledge base...
+# [RAG] Found X relevant chunks
+```
+
+**本番環境:**
+- Vercelに再デプロイ
+- チャット機能をテスト
+- 回答に「📄 引用：〜」が含まれることを確認
+
+### 重要ファイル
+- **詳細手順**: `RAG_SETUP.md` を参照
+- **スキーマ**: `supabase/vector-schema.sql`
+- **CLI**: `scripts/upload-knowledge.js`
+
+### チェックリスト
+- [x] RAG機能実装完了
+- [x] ドキュメント作成（RAG_SETUP.md）
+- [x] GitHubにプッシュ
+- [ ] Supabaseスキーマ実行（ユーザー作業）
+- [ ] PDFアップロード（ユーザー作業）
+- [ ] Vercel環境変数追加（ユーザー作業）
+- [ ] 本番環境動作確認（ユーザー作業）
+
+---
+
+**次回セッション開始時**: 上記のチェックリストから未完了項目を確認してください。

@@ -28,9 +28,10 @@ async function initializePage() {
   try {
     console.log('Initializing chat page...');
 
-    // Memberstack初期化
+    // Memberstack初期化（window.ENVから取得）
+    console.log('Using Public Key:', window.ENV.MEMBERSTACK_PUBLIC_KEY);
     const memberstack = memberstackDOM.init({
-      publicKey: "pk_sb_bbb8fe9f7c9e2de2a3aa"
+      publicKey: window.ENV.MEMBERSTACK_PUBLIC_KEY
     });
     console.log('Memberstack initialized');
 
@@ -357,7 +358,7 @@ async function handleLogout() {
   try {
     // Memberstack認証ログアウト
     const memberstack = memberstackDOM.init({
-      publicKey: "pk_sb_bbb8fe9f7c9e2de2a3aa"
+      publicKey: window.ENV.MEMBERSTACK_PUBLIC_KEY
     });
     await memberstack.logout();
 

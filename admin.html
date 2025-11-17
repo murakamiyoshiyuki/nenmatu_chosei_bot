@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>年末調整BOT - 管理画面</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Supabase Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- 環境変数設定 -->
+  <script src="./config.js"></script>
+
+  <style>
+    .stat-card {
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- ヘッダー -->
+  <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-indigo-100 rounded-lg">
+          <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-gray-800">年末調整BOT 管理画面</h1>
+          <p class="text-xs text-gray-600">税理士事務所管理者用</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <button
+          id="refreshButton"
+          class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+        >
+          <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          更新
+        </button>
+
+        <a
+          href="/chat.html"
+          class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition"
+        >
+          チャット画面へ
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="max-w-7xl mx-auto p-6">
+
+    <!-- 統計サマリー -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+
+      <!-- 総ユーザー数 -->
+      <div class="stat-card bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-medium text-gray-600">総ユーザー数</h3>
+          <div class="p-2 bg-blue-100 rounded-lg">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+          </div>
+        </div>
+        <p id="totalUsers" class="text-3xl font-bold text-gray-800">-</p>
+        <p class="text-xs text-gray-500 mt-1">アクティブユーザー</p>
+      </div>
+
+      <!-- 今月の総質問数 -->
+      <div class="stat-card bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-medium text-gray-600">今月の総質問数</h3>
+          <div class="p-2 bg-green-100 rounded-lg">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+            </svg>
+          </div>
+        </div>
+        <p id="totalQuestions" class="text-3xl font-bold text-gray-800">-</p>
+        <p class="text-xs text-gray-500 mt-1">質問総数</p>
+      </div>
+
+      <!-- 今日の質問数 -->
+      <div class="stat-card bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-medium text-gray-600">今日の質問数</h3>
+          <div class="p-2 bg-purple-100 rounded-lg">
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+          </div>
+        </div>
+        <p id="todayQuestions" class="text-3xl font-bold text-gray-800">-</p>
+        <p class="text-xs text-gray-500 mt-1">本日の活動</p>
+      </div>
+
+      <!-- 平均利用回数 -->
+      <div class="stat-card bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-medium text-gray-600">平均利用回数</h3>
+          <div class="p-2 bg-orange-100 rounded-lg">
+            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+        </div>
+        <p id="avgUsage" class="text-3xl font-bold text-gray-800">-</p>
+        <p class="text-xs text-gray-500 mt-1">ユーザーあたり/月</p>
+      </div>
+
+    </div>
+
+    <!-- ユーザー別利用状況 -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">ユーザー別利用状況</h2>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ユーザーID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">今月の利用回数</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最終利用日時</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状態</th>
+            </tr>
+          </thead>
+          <tbody id="usageTableBody" class="bg-white divide-y divide-gray-200">
+            <!-- データがここに挿入されます -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 最新の質問一覧 -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">最新の質問（20件）</h2>
+
+      <div class="space-y-4" id="recentQuestionsContainer">
+        <!-- 最新の質問がここに挿入されます -->
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import {
+      initSupabase,
+      getAllUsageStats,
+      getRecentQuestions
+    } from './lib/supabase.js';
+
+    let statsData = null;
+
+    // 初期化
+    async function initialize() {
+      initSupabase();
+      await loadDashboardData();
+    }
+
+    // ダッシュボードデータを読み込み
+    async function loadDashboardData() {
+      try {
+        // 統計データを取得
+        statsData = await getAllUsageStats();
+        const recentQuestions = await getRecentQuestions(20);
+
+        // サマリーを更新
+        updateSummary(statsData, recentQuestions);
+
+        // ユーザー別利用状況を表示
+        displayUsageTable(statsData);
+
+        // 最新の質問を表示
+        displayRecentQuestions(recentQuestions);
+
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        alert('データの読み込みに失敗しました: ' + error.message);
+      }
+    }
+
+    // サマリーを更新
+    function updateSummary(stats, questions) {
+      // 総ユーザー数
+      document.getElementById('totalUsers').textContent = stats.length;
+
+      // 総質問数
+      const totalQuestions = stats.reduce((sum, user) => sum + user.count, 0);
+      document.getElementById('totalQuestions').textContent = totalQuestions;
+
+      // 今日の質問数
+      const today = new Date().toISOString().split('T')[0];
+      const todayCount = questions.filter(q => q.created_at.startsWith(today)).length;
+      document.getElementById('todayQuestions').textContent = todayCount;
+
+      // 平均利用回数
+      const avgUsage = stats.length > 0 ? Math.round(totalQuestions / stats.length) : 0;
+      document.getElementById('avgUsage').textContent = avgUsage;
+    }
+
+    // ユーザー別利用状況テーブルを表示
+    function displayUsageTable(stats) {
+      const tbody = document.getElementById('usageTableBody');
+      tbody.innerHTML = '';
+
+      // 利用回数でソート（降順）
+      const sortedStats = [...stats].sort((a, b) => b.count - a.count);
+
+      sortedStats.forEach(user => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50 transition';
+
+        // 状態バッジ
+        const status = user.count >= 90
+          ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">上限間近</span>'
+          : user.count >= 50
+          ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">通常</span>'
+          : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">正常</span>';
+
+        // 最終利用日時をフォーマット
+        const lastUsed = new Date(user.lastUsed).toLocaleString('ja-JP');
+
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.userId}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <div class="flex items-center">
+              <span class="font-semibold">${user.count}</span>
+              <span class="text-gray-500 ml-1">/ 100</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${lastUsed}</td>
+          <td class="px-6 py-4 whitespace-nowrap">${status}</td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    // 最新の質問を表示
+    function displayRecentQuestions(questions) {
+      const container = document.getElementById('recentQuestionsContainer');
+      container.innerHTML = '';
+
+      questions.forEach(q => {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'border border-gray-200 rounded-lg p-4 hover:shadow-md transition';
+
+        const timestamp = new Date(q.created_at).toLocaleString('ja-JP');
+
+        questionDiv.innerHTML = `
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span class="text-xs font-semibold text-gray-600">ユーザー: ${q.user_id}</span>
+            </div>
+            <span class="text-xs text-gray-500">${timestamp}</span>
+          </div>
+          <p class="text-sm text-gray-800 font-medium mb-2">${q.question}</p>
+          <details class="text-sm text-gray-600">
+            <summary class="cursor-pointer text-indigo-600 hover:text-indigo-800">回答を表示</summary>
+            <div class="mt-2 p-3 bg-gray-50 rounded-lg">
+              ${q.answer}
+            </div>
+          </details>
+        `;
+
+        container.appendChild(questionDiv);
+      });
+    }
+
+    // 更新ボタン
+    document.getElementById('refreshButton').addEventListener('click', async () => {
+      await loadDashboardData();
+    });
+
+    // 初期化実行
+    window.addEventListener('DOMContentLoaded', initialize);
+  </script>
+
+</body>
+</html>

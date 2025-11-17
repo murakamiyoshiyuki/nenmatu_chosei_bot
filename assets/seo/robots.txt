@@ -1,0 +1,58 @@
+# robots.txt
+# 年末調整bot会員サイト
+# 確証レベル：【一般論】
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 【Webflow設定方法】
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# WebflowはデフォルトでProject Settings > SEO > robots.txt を
+# 自動生成しますが、カスタマイズする場合は以下の内容を使用してください。
+#
+# 設定位置:
+# Project Settings > Hosting > Advanced Publishing Options
+#
+# 注意:
+# - Webflowの自動生成を優先する場合、このファイルは参考用です
+# - カスタムドメイン使用時は、ドメインURLを正しく設定してください
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# すべてのクローラーに対する基本ルール
+User-agent: *
+
+# クロール許可（公開ページ）
+Allow: /
+Allow: /how-to-enter
+
+# クロール禁止（会員専用・ログインページ）
+Disallow: /login
+Disallow: /portal
+
+# 管理ページ・システムページ
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_/
+
+# 検索エンジンに表示しないページ（任意）
+# Disallow: /test/
+# Disallow: /draft/
+
+# サイトマップの場所
+Sitemap: https://yourdomain.com/sitemap.xml
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 【注意事項】
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# 1. 「yourdomain.com」を実際のドメインに置き換えてください
+#
+# 2. /portal と /login は会員専用のため Disallow に設定
+#    （ページのメタタグでも noindex, nofollow を設定済み）
+#
+# 3. 利用規約・プライバシーポリシーなどの法務ページは
+#    公開（Allow）のままにしてください
+#
+# 4. Webflowのデフォルト robots.txt は自動生成されるため、
+#    カスタマイズが不要な場合はこのファイルは使用しません
+#
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

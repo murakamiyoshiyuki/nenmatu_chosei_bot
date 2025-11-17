@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>年末調整BOT - チャット（シンプル版）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+</head>
+<body class="bg-gray-50">
+
+  <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-6xl mx-auto px-4 py-4">
+      <h1 class="text-xl font-bold text-gray-800">年末調整BOT（テスト版）</h1>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto p-4">
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+
+      <div id="chatMessages" class="p-6 overflow-y-auto space-y-4" style="height: 500px;">
+        <div class="text-center py-8">
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">年末調整についてご質問ください</h2>
+          <p class="text-gray-600">国税庁の資料に基づき、正確にお答えします。</p>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-200 p-4 bg-gray-50">
+        <div class="flex items-end space-x-3">
+          <textarea
+            id="questionInput"
+            rows="2"
+            placeholder="年末調整について質問を入力..."
+            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 outline-none"
+            maxlength="1000"
+          ></textarea>
+          <button
+            id="sendButton"
+            class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700"
+          >
+            送信
+          </button>
+        </div>
+        <div id="errorMessage" class="mt-2 text-red-600 text-sm hidden"></div>
+        <div id="statusMessage" class="mt-2 text-gray-600 text-sm"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // グローバル変数
+    let supabaseClient = null;
+    let currentUserId = 'demo-user-' + Date.now();
+
+    // 初期化
+    async function initialize() {
+      try {
+        showStatus('初期化中...');
+
+        // 環境変数チェック
+        if (!window.ENV) {
+          throw new Error('config.js が読み込まれていません');
+        }
+
+        console.log('環境変数:', {
+          hasOpenAI: !!window.ENV.OPENAI_API_KEY,
+          hasSupabase: !!window.ENV.SUPABASE_URL,
+          supabaseUrl: window.ENV.SUPABASE_URL
+        });
+
+        // Supabase初期化
+        if (window.ENV.SUPABASE_URL && window.ENV.SUPABASE_ANON_KEY) {
+          supabaseClient = supabase.createClient(
+            window.ENV.SUPABASE_URL,
+            window.ENV.SUPABASE_ANON_KEY
+          );
+          console.log('Supabase初期化成功');
+        } else {
+          console.warn('Supabase credentials not configured');
+        }
+
+        // イベントリスナー
+        document.getElementById('sendButton').addEventListener('click', handleSend);
+        document.getElementById('questionInput').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        });
+
+        showStatus('初期化完了！質問を入力してください。');
+        hideStatus();
+
+      } catch (error) {
+        console.error('初期化エラー:', error);
+        showError('初期化に失敗しました: ' + error.message);
+      }
+    }
+
+    // 送信処理
+    async function handleSend() {
+      const input = document.getElementById('questionInput');
+      const question = input.value.trim();
+
+      if (!question) {
+        showError('質問を入力してください');
+        return;
+      }
+
+      if (!window.ENV.OPENAI_API_KEY) {
+        showError('OpenAI APIキーが設定されていません');
+        return;
+      }
+
+      try {
+        input.value = '';
+        addMessage('user', question);
+        showStatus('AI回答を取得中...');
+
+        // OpenAI API呼び出し
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${window.ENV.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4',
+            messages: [
+              {
+                role: 'system',
+                content: 'あなたは日本の年末調整専門コンサルタントAIです。正確で丁寧な回答を心がけてください。'
+              },
+              {
+                role: 'user',
+                content: question
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 2000
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
+        }
+
+        const data = await response.json();
+        const answer = data.choices[0].message.content;
+
+        addMessage('assistant', answer);
+        hideStatus();
+
+        // Supabaseに保存
+        if (supabaseClient) {
+          try {
+            await supabaseClient.from('chat_history').insert({
+              user_id: currentUserId,
+              question: question,
+              answer: answer,
+              sources: []
+            });
+            console.log('会話履歴を保存しました');
+          } catch (dbError) {
+            console.error('DB保存エラー:', dbError);
+          }
+        }
+
+      } catch (error) {
+        console.error('エラー:', error);
+        showError('エラーが発生しました: ' + error.message);
+      }
+    }
+
+    // メッセージ追加
+    function addMessage(role, content) {
+      const container = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+      const bubble = document.createElement('div');
+      bubble.className = `max-w-xl px-4 py-3 rounded-2xl ${
+        role === 'user'
+          ? 'bg-indigo-600 text-white'
+          : 'bg-gray-100 text-gray-800'
+      }`;
+      bubble.innerHTML = `
+        <div class="text-xs font-semibold mb-1 ${role === 'user' ? 'text-indigo-200' : 'text-gray-600'}">
+          ${role === 'user' ? 'あなた' : 'AI アシスタント'}
+        </div>
+        <div>${content.replace(/\n/g, '<br>')}</div>
+      `;
+
+      div.appendChild(bubble);
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // ステータス表示
+    function showStatus(message) {
+      const el = document.getElementById('statusMessage');
+      el.textContent = message;
+      el.classList.remove('hidden');
+    }
+
+    function hideStatus() {
+      setTimeout(() => {
+        document.getElementById('statusMessage').classList.add('hidden');
+      }, 2000);
+    }
+
+    function showError(message) {
+      const el = document.getElementById('errorMessage');
+      el.textContent = message;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    // 初期化実行
+    window.addEventListener('DOMContentLoaded', initialize);
+  </script>
+
+</body>
+</html>

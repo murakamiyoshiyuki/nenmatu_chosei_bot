@@ -1,0 +1,93 @@
+<!--
+  Typebot埋め込みセクション（Portal Page - Bot Embed）
+
+  【Webflow配置位置】
+  - 会員専用ページ（/portal）のメインコンテンツエリア
+  - Embed要素として貼り付け
+
+  【設定方法】
+  1. Typebotで年末調整botを作成
+  2. Typebot > Share > Embed で埋め込みコードを取得
+  3. 下記の「YOUR_TYPEBOT_URL」を実際のTypebotのURLに置き換え
+
+  【Memberstack設定】
+  - /portal ページを「Members only」に設定する必要があります
+  - Project Settings > Pages > /portal > Access: Members only
+
+  【注意事項】
+  - min-height を調整してbotの高さを最適化してください
+  - iframe の src 属性に正しいTypebot URLを設定してください
+-->
+
+<style>
+  .nf-bot-embed {
+    width: 100%;
+    background-color: #ffffff;
+    padding: 2rem;
+  }
+
+  .nf-bot-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 70vh;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .nf-bot-iframe {
+    width: 100%;
+    height: 700px;
+    min-height: 70vh;
+    border: none;
+  }
+
+  /* レスポンシブ対応 */
+  @media (max-width: 768px) {
+    .nf-bot-embed {
+      padding: 1rem;
+    }
+
+    .nf-bot-container {
+      min-height: 60vh;
+    }
+
+    .nf-bot-iframe {
+      height: 600px;
+      min-height: 60vh;
+    }
+  }
+</style>
+
+<section class="nf-bot-embed">
+  <div class="nf-bot-container">
+    <!--
+      【重要】下記のiframe srcを実際のTypebot URLに置き換えてください
+      例: https://typebot.co/your-bot-id
+    -->
+    <iframe
+      class="nf-bot-iframe"
+      src="YOUR_TYPEBOT_URL"
+      allow="clipboard-write; microphone"
+      title="年末調整bot"
+    ></iframe>
+  </div>
+</section>
+
+<!--
+  【Typebotの設定手順】
+
+  1. Typebotにログイン（https://typebot.io/）
+  2. 新規Typebotを作成または既存のbotを開く
+  3. Settings > Instructions に以下を設定：
+     - System/Instructionsに税理士事務所のプロンプトを貼り付け
+     - 国税庁PDFを優先参照するよう設定
+     - 回答末尾に参考リンクを付けるよう設定
+  4. Share > Embed でiframeコードを取得
+  5. 上記の「YOUR_TYPEBOT_URL」を実際のURLに置き換え
+
+  【推奨設定】
+  - Typebot Theme: Professional/Minimal
+  - Font: Noto Sans JP（日本語対応）
+  - Primary Color: #667eea（Heroセクションと統一）
+-->

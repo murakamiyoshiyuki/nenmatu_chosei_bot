@@ -1,0 +1,291 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SEO / メタタグ設定
+年末調整bot会員サイト
+確証レベル：【一般論】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【Webflow設定位置】
+各ページの Page Settings > SEO Settings
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 1. ランディングページ（/）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【Title Tag】（60文字以内推奨）
+年末調整bot｜国税庁PDF優先参照で根拠ある回答
+
+【Meta Description】（155文字以内推奨）
+年末調整の疑問に国税庁の一次資料を参照して即答。根拠リンク付きで正確な情報を提供します。社内共有しやすい形式で、誤回答を防ぐ安心設計。
+
+【Meta Keywords】（任意・現在のSEO効果は限定的）
+年末調整, 国税庁, 税務, 控除, 源泉徴収, 年末調整bot
+
+【OGP（Open Graph Protocol）タグ】
+
+og:title
+年末調整bot｜国税庁PDF優先参照で根拠ある回答
+
+og:description
+年末調整の疑問に国税庁の一次資料を参照して即答。根拠リンク付きで正確な情報を提供。
+
+og:type
+website
+
+og:url
+https://yourdomain.com/
+
+og:image
+https://yourdomain.com/images/og-image.png
+（推奨サイズ: 1200×630px）
+
+og:site_name
+年末調整bot
+
+【Twitter Card タグ】
+
+twitter:card
+summary_large_image
+
+twitter:title
+年末調整bot｜国税庁PDF優先参照で根拠ある回答
+
+twitter:description
+年末調整の疑問に国税庁の一次資料を参照して即答。根拠リンク付きで正確な情報を提供。
+
+twitter:image
+https://yourdomain.com/images/twitter-card.png
+（推奨サイズ: 1200×675px）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 2. 入場方法ページ（/how-to-enter）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【Title Tag】
+ご利用の流れ（入場方法）｜年末調整bot
+
+【Meta Description】
+年末調整botのご利用方法をご案内します。銀行振込による入金確認後、招待制でご利用いただけます。お申し込みから利用開始までの手順を詳しく解説。
+
+【OGP タグ】
+
+og:title
+ご利用の流れ（入場方法）｜年末調整bot
+
+og:description
+銀行振込による入金確認後、招待制でご利用いただけます。お申し込みから利用開始までの手順を解説。
+
+og:type
+article
+
+og:url
+https://yourdomain.com/how-to-enter
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 3. ログインページ（/login）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【Title Tag】
+ログイン｜年末調整bot
+
+【Meta Description】
+年末調整bot会員専用のログインページです。入金確認後の招待メールからアカウント作成いただけます。
+
+【Robots Meta Tag】
+noindex, nofollow
+（検索エンジンにインデックスさせない）
+
+【OGP タグ】
+※ ログインページはOGP不要（SNSシェア想定外）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 4. 会員専用ページ（/portal）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【Title Tag】
+年末調整bot（2025年版）｜会員専用
+
+【Meta Description】
+年末調整botの会員専用ページです。国税庁PDFを最優先参照し、根拠リンク付きで回答します。
+
+【Robots Meta Tag】
+noindex, nofollow
+（会員専用のため検索エンジンにインデックスさせない）
+
+【OGP タグ】
+※ 会員専用ページはOGP不要
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 5. 利用規約（/terms）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【Title Tag】
+利用規約｜年末調整bot
+
+【Meta Description】
+年末調整botの利用規約です。サービスのご利用前に必ずお読みください。
+
+【OGP タグ】
+
+og:title
+利用規約｜年末調整bot
+
+og:type
+article
+
+og:url
+https://yourdomain.com/terms
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 6. プライバシーポリシー（/privacy）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【Title Tag】
+プライバシーポリシー｜年末調整bot
+
+【Meta Description】
+年末調整botのプライバシーポリシーです。個人情報の取り扱いについてご説明します。
+
+【OGP タグ】
+
+og:title
+プライバシーポリシー｜年末調整bot
+
+og:type
+article
+
+og:url
+https://yourdomain.com/privacy
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 7. 特商法表記（/legal）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【Title Tag】
+特定商取引法に基づく表記｜年末調整bot
+
+【Meta Description】
+年末調整botの特定商取引法に基づく表記です。
+
+【OGP タグ】
+
+og:title
+特定商取引法に基づく表記｜年末調整bot
+
+og:type
+article
+
+og:url
+https://yourdomain.com/legal
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 8. Webflow での設定方法
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【各ページでの設定手順】
+
+1. Webflowエディタで該当ページを開く
+2. 左側パネルの「Pages」タブを開く
+3. 該当ページの設定アイコン（⚙）をクリック
+4. 「SEO Settings」タブを開く
+5. 以下を入力:
+   - Title Tag
+   - Meta Description
+   - Meta Keywords（任意）
+6. 「Open Graph Settings」を展開し、OGPタグを入力
+7. 保存
+
+【Project Settings でのグローバル設定】
+
+Project Settings > SEO タブで以下を設定:
+
+- Site Name: 年末調整bot
+- Meta Description（デフォルト）: 上記のランディングページと同じ
+- OG Image（デフォルト）: 1200×630px の画像をアップロード
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 9. 構造化データ（JSON-LD）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【設置位置】
+Project Settings > Custom Code > Head Code（またはFooter Code）
+
+【WebSite構造化データ】
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "年末調整bot",
+  "url": "https://yourdomain.com/",
+  "description": "年末調整の疑問に国税庁の一次資料を参照して即答。根拠リンク付きで正確な情報を提供します。",
+  "publisher": {
+    "@type": "Organization",
+    "name": "年末調整bot運営事務局"
+  }
+}
+</script>
+
+【Organization構造化データ】
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "年末調整bot運営事務局",
+  "url": "https://yourdomain.com/",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "Customer Service",
+    "email": "support@yourdomain.com"
+  }
+}
+</script>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 10. Canonical URL設定
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+各ページの <head> に以下を追加（Webflowは自動で追加されますが、確認推奨）:
+
+<link rel="canonical" href="https://yourdomain.com/ページパス">
+
+例:
+- ランディングページ: https://yourdomain.com/
+- 入場方法: https://yourdomain.com/how-to-enter
+- ログイン: https://yourdomain.com/login
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 11. OG画像作成ガイドライン
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【推奨サイズ】
+- OG Image: 1200×630px（Facebook, LinkedIn）
+- Twitter Card: 1200×675px または 1200×630px
+
+【デザイン案】
+- 背景: グラデーション（#667eea → #764ba2）
+- テキスト: 「年末調整bot」（大きく、白色）
+- サブテキスト: 「国税庁PDF優先参照」（中サイズ、白色）
+- アイコン: 書類や国税庁マークなど（任意）
+
+【ファイル形式】
+- PNG または JPG
+- ファイルサイズ: 1MB以下推奨
+
+【配置】
+Webflow Assets にアップロード → Project Settings > SEO > Default OG Image
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+END OF META TAGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

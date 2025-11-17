@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  sitemap.xml
+  年末調整bot会員サイト
+  確証レベル：【一般論】
+
+  【Webflow設定方法】
+  Webflowは自動的にsitemap.xmlを生成します。
+  手動でカスタマイズする場合は、以下の内容を参考にしてください。
+
+  自動生成されたサイトマップの確認:
+  https://yourdomain.com/sitemap.xml
+
+  カスタムサイトマップをアップロードする場合:
+  Project Settings > Hosting > Advanced Publishing Options
+-->
+
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- ランディングページ（/） -->
+  <url>
+    <loc>https://yourdomain.com/</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- 入場方法ページ（/how-to-enter） -->
+  <url>
+    <loc>https://yourdomain.com/how-to-enter</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 利用規約（/terms） -->
+  <url>
+    <loc>https://yourdomain.com/terms</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- プライバシーポリシー（/privacy） -->
+  <url>
+    <loc>https://yourdomain.com/privacy</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- 特商法表記（/legal） -->
+  <url>
+    <loc>https://yourdomain.com/legal</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!--
+    【注意】
+    以下のページは会員専用のため、sitemap.xmlには含めません：
+    - /login
+    - /portal
+
+    これらのページは robots.txt で Disallow に設定し、
+    ページのメタタグでも noindex, nofollow を設定しています。
+  -->
+
+</urlset>
+
+<!--
+  【設定ガイド】
+
+  1. 各URLの要素説明:
+     - <loc>: ページのURL（https://で始まる絶対URL）
+     - <lastmod>: 最終更新日（YYYY-MM-DD形式）
+     - <changefreq>: 更新頻度の目安
+       - always: 常に変更
+       - hourly: 毎時
+       - daily: 毎日
+       - weekly: 毎週
+       - monthly: 毎月
+       - yearly: 毎年
+       - never: 変更なし
+     - <priority>: ページの重要度（0.0〜1.0）
+
+  2. 更新頻度と優先度の推奨設定:
+     - トップページ: monthly, 1.0
+     - サービス紹介ページ: monthly, 0.8
+     - 法務ページ: yearly, 0.5
+
+  3. 除外すべきページ:
+     - ログインページ（/login）
+     - 会員専用ページ（/portal）
+     - 管理画面（/admin/）
+     - テストページ（/test/）
+
+  4. 更新方法:
+     - lastmod の日付を更新時に変更
+     - 新しいページを追加した場合は <url> ブロックを追加
+     - 「yourdomain.com」を実際のドメインに置き換え
+
+  5. Webflowでの確認:
+     - Webflowは自動でsitemap.xmlを生成します
+     - 公開後、https://yourdomain.com/sitemap.xml にアクセスして確認
+     - Google Search Consoleに登録してインデックス状況を監視
+
+  6. Google Search Console への登録:
+     a. https://search.google.com/search-console/ にアクセス
+     b. サイトを追加
+     c. サイトマップタブで sitemap.xml のURLを送信
+     d. インデックス状況を定期的に確認
+
+  【次のステップ】
+  - Google Search Console でサイトマップを送信
+  - Bing Webmaster Tools でも登録推奨
+  - 定期的にクロールエラーをチェック
+-->

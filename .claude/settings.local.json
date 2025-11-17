@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(dir:*)",
+      "Bash(python -m http.server:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(copy .env.example .env)",
+      "Bash(cat:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(python:*)",
+      "Bash(ping:*)",
+      "Bash(nul)",
+      "Bash(taskkill /F /PID 58932)",
+      "Bash(taskkill //F //PID 58932)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

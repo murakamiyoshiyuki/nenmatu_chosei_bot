@@ -1,0 +1,104 @@
+<!--
+  機能紹介セクション（Features Section）
+
+  【Webflow配置位置】
+  - ランディングページ（/）のHeroセクションの直後
+  - Embed要素として貼り付け
+
+  【カスタマイズ方法】
+  - アイコンを追加する場合は、各 .nf-feature-item の最初に画像を挿入
+  - 3カラムから2カラムや4カラムに変更する場合は grid-template-columns を調整
+-->
+
+<style>
+  .nf-features {
+    width: 100%;
+    background-color: #f7fafc;
+    padding: 4rem 2rem;
+  }
+
+  .nf-features-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .nf-features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .nf-feature-item {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .nf-feature-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .nf-feature-item h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 1rem;
+  }
+
+  .nf-feature-item p {
+    font-size: 1rem;
+    color: #4a5568;
+    line-height: 1.6;
+  }
+
+  /* レスポンシブ対応 */
+  @media (max-width: 1024px) {
+    .nf-features-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .nf-features {
+      padding: 3rem 1.5rem;
+    }
+
+    .nf-features-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+</style>
+
+<section class="nf-features">
+  <div class="nf-features-container">
+    <div class="nf-features-grid">
+      <!-- Feature 1 -->
+      <div class="nf-feature-item">
+        <h3>根拠を提示</h3>
+        <p>
+          回答の末尾に国税庁の参考リンクを記載します。一次資料に基づいた確かな情報をお届けします。
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="nf-feature-item">
+        <h3>社内で共有しやすい</h3>
+        <p>
+          手順と分岐を見出し付きで出力します。そのまま社内マニュアルや共有資料としてご活用いただけます。
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="nf-feature-item">
+        <h3>誤回答ガード</h3>
+        <p>
+          不明な内容は「不明」と明示します。曖昧な推測による誤回答を防ぎ、正確性を優先します。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

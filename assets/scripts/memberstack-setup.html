@@ -1,0 +1,107 @@
+<!--
+  Memberstack セットアップスクリプト
+
+  【Webflow配置位置】
+  Project Settings > Custom Code > Head Code
+
+  【設定手順】
+  1. Memberstackアカウントにログイン（https://www.memberstack.com/）
+  2. 新規プロジェクト作成または既存プロジェクトを選択
+  3. Settings > Installation で「Webflow」を選択
+  4. 表示されたスクリプトをコピー
+  5. 下記の「YOUR_MEMBERSTACK_ID」を実際のIDに置き換え
+
+  【重要な設定】
+  - Public Sign-up: OFF（招待制のため）
+  - Protected Pages: /portal を「Members only」に設定
+  - Plans: 無料プラン「Free」を1つ作成（入場権のみ）
+-->
+
+<!-- Memberstack Script -->
+<script
+  src="https://api.memberstack.com/static/memberstack.js?custom"
+  data-memberstack-id="YOUR_MEMBERSTACK_ID">
+</script>
+
+<!--
+  【Memberstack設定ガイド】
+
+  1. プロジェクト基本設定
+     - Project Name: 年末調整bot会員サイト
+     - Platform: Webflow
+
+  2. Public Sign-up設定（必須）
+     - Settings > General > Public Sign-up: OFF
+     - これにより招待制になります
+
+  3. Plans（プラン）設定
+     - Plans > Create Plan
+     - Plan Name: Free（または「入場権」）
+     - Price: 無料（¥0）
+     - Description: 年末調整bot利用権
+     - Features: /portal へのアクセス権
+
+  4. Protected Pages（保護ページ）設定
+     - Pages > Add Page
+     - Page URL: /portal
+     - Access: Members only
+     - これにより /portal は会員のみアクセス可能になります
+
+  5. 招待フロー
+     a. 入金確認後、管理画面で以下を実施：
+        - Members > Invite Member
+        - Email: ユーザーのメールアドレス
+        - Plan: Free（または作成したプラン）
+        - Send Invitation
+
+     b. ユーザーは招待メールを受信
+        - メール内のリンクをクリック
+        - パスワードを設定
+        - 自動的にログイン → /portal へアクセス可能
+
+  6. ログイン/ログアウト設定
+     - Navbar の「ログイン」ボタン: /login ページへリンク
+     - /login ページに Memberstack のログインフォームを配置
+       （data-ms-login-form 属性を使用）
+
+  7. 会員状態による表示切り替え
+     - data-ms-hide="non-members" → 会員のみに表示
+     - data-ms-hide="members" → 非会員のみに表示
+
+  【Webflowでの設定手順】
+
+  1. このスクリプトを Webflow の Project Settings > Custom Code > Head Code に貼り付け
+
+  2. /login ページの作成
+     - 新規ページ作成: /login
+     - Embed要素を追加し、以下を貼り付け:
+       <div data-ms-login-form></div>
+
+  3. /portal ページの保護設定
+     - Memberstackダッシュボードで /portal を「Members only」に設定
+     - または、ページに以下の属性を追加:
+       <meta name="memberstack" content="page:protected">
+
+  4. Navbar の表示切り替え
+     - 「ログイン」ボタンに: data-ms-hide="members"
+     - 「マイページ」ボタンに: data-ms-hide="non-members"
+
+  【トラブルシューティング】
+
+  問題: ログイン後も /portal にアクセスできない
+  → Memberstackで /portal が「Members only」に設定されているか確認
+  → ユーザーに正しいプランが割り当てられているか確認
+
+  問題: 招待メールが届かない
+  → 迷惑メールフォルダを確認
+  → Memberstack > Members で招待ステータスを確認
+  → 必要に応じて再送信
+
+  問題: Public Sign-upをOFFにしても登録フォームが表示される
+  → Settings > General > Public Sign-up が確実にOFFになっているか確認
+  → ページキャッシュをクリア
+
+  【参考リンク】
+  - Memberstack公式ドキュメント: https://docs.memberstack.com/
+  - Webflow統合ガイド: https://docs.memberstack.com/hc/en-us/articles/4406776616471
+-->

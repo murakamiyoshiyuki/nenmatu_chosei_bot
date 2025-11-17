@@ -1,0 +1,119 @@
+<!--
+  ヒーローセクション（Hero Section）
+
+  【Webflow配置位置】
+  - ランディングページ（/）のNavbarの直後
+  - Embed要素として貼り付け
+
+  【カスタマイズ方法】
+  - 背景色を変更: background-color の値を変更
+  - テキストの内容は「02_copy-text.txt」を参照
+-->
+
+<style>
+  .nf-hero {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 5rem 2rem;
+    text-align: center;
+  }
+
+  .nf-hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .nf-hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .nf-hero-subtitle {
+    font-size: 1.25rem;
+    color: #f7fafc;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+  }
+
+  .nf-hero-cta {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .nf-btn-primary,
+  .nf-btn-secondary {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: inline-block;
+  }
+
+  .nf-btn-primary {
+    background-color: #ffffff;
+    color: #667eea;
+  }
+
+  .nf-btn-primary:hover {
+    background-color: #f7fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .nf-btn-secondary {
+    background-color: transparent;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+  }
+
+  .nf-btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* レスポンシブ対応 */
+  @media (max-width: 768px) {
+    .nf-hero {
+      padding: 3rem 1.5rem;
+    }
+
+    .nf-hero-title {
+      font-size: 1.875rem;
+    }
+
+    .nf-hero-subtitle {
+      font-size: 1.125rem;
+    }
+
+    .nf-hero-cta {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .nf-btn-primary,
+    .nf-btn-secondary {
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+</style>
+
+<section class="nf-hero">
+  <div class="nf-hero-content">
+    <h1 class="nf-hero-title">年末調整の疑問に、一次資料で即答。</h1>
+    <p class="nf-hero-subtitle">
+      国税庁の最新PDFを優先参照し、根拠リンク付きで回答します。
+    </p>
+    <div class="nf-hero-cta">
+      <a href="/how-to-enter" class="nf-btn-primary">入場方法を見る</a>
+      <a href="/login" class="nf-btn-secondary">ログイン</a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,68 @@
+<!--
+  注意事項セクション（Notice Section）
+
+  【Webflow配置位置】
+  - ランディングページ（/）のFeaturesセクションの直後
+  - 入場方法ページ（/how-to-enter）の最下部（フッター直前）
+  - Embed要素として貼り付け
+
+  【用途】
+  - 免責文言の表示
+  - 重要な注意事項の強調表示
+-->
+
+<style>
+  .nf-notice {
+    width: 100%;
+    background-color: #fff5f5;
+    border-left: 4px solid #f56565;
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .nf-notice-content {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .nf-notice-content h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #742a2a;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nf-notice-content p {
+    font-size: 0.95rem;
+    color: #2d3748;
+    line-height: 1.7;
+  }
+
+  /* レスポンシブ対応 */
+  @media (max-width: 768px) {
+    .nf-notice {
+      padding: 1.5rem 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .nf-notice-content h3 {
+      font-size: 1.125rem;
+    }
+
+    .nf-notice-content p {
+      font-size: 0.875rem;
+    }
+  }
+</style>
+
+<section class="nf-notice">
+  <div class="nf-notice-content">
+    <h3>⚠️ 重要なお知らせ</h3>
+    <p>
+      本サービスは、年末調整に関する一般的な取扱いに基づく情報提供を目的としています。個別の納税額の確定、税務代理、税務申告書の作成は行いません。最終的な判断は所轄税務署または顧問税理士にご確認ください。
+    </p>
+  </div>
+</section>

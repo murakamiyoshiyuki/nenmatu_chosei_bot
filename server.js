@@ -26,6 +26,10 @@ app.use(cors()); // 開発中は全てのオリジンを許可
 app.use(express.json());
 app.use(express.static(__dirname)); // 静的ファイル配信
 
+import { searchKnowledge } from './lib/vector-search.js';
+
+// ... (imports remain the same)
+
 // システムプロンプト（年末調整専門コンサルタント）
 const SYSTEM_PROMPT = `あなたは「日本の年末調整専門コンサルタントAI」です。
 
@@ -42,9 +46,10 @@ const SYSTEM_PROMPT = `あなたは「日本の年末調整専門コンサルタ
 
 【回答スタイル】
 1. 質問の要点を確認
-2. 法的根拠と実務上の取り扱いを説明
-3. 具体例や注意点を補足
-4. 必要に応じて参照先を提示
+2. 提供された「参考情報」がある場合は、それを優先的に使用して回答を構築
+3. 法的根拠と実務上の取り扱いを説明
+4. 具体例や注意点を補足
+5. 必要に応じて参照先を提示
 
 【注意事項】
 - 税務相談は最終的に税理士・税務署への確認を推奨
@@ -72,12 +77,30 @@ app.post('/api/chat', async (req, res) => {
       return res.status(500).json({ error: 'Server configuration error: Missing API key' });
     }
 
-    console.log(`[API] Received question from user ${userId || 'unknown'}`);
+    console.log(`[API] Received question from user ${userId || 'unknown'}: ${message.substring(0, 50)}...`);
     console.log(`[API] Using model: ${model}`);
 
-    // メッセージ履歴を構築
+    // 1. ナレッジベース検索 (RAG)
+    console.log('[API] Searching knowledge base...');
+    const searchResults = await searchKnowledge(message);
+    console.log(`[API] Found ${searchResults.length} relevant chunks`);
+
+    // 2. コンテキストの構築
+    let contextText = '';
+    if (searchResults.length > 0) {
+      contextText = searchResults.map((result, index) => {
+        return `--- 参考情報 ${index + 1} (信頼度: ${Math.round(result.similarity * 100)}%) ---\n出典: ${result.pdf_name} (p.${result.page_number})\n内容:\n${result.text}\n`;
+      }).join('\n');
+    } else {
+      contextText = '（関連する参考情報は見つかりませんでした。一般的な知識に基づいて回答してください。）';
+    }
+
+    // 3. メッセージ履歴を構築
     const messages = [
-      { role: 'system', content: SYSTEM_PROMPT }
+      {
+        role: 'system',
+        content: `${SYSTEM_PROMPT}\n\n【参考情報】\nユーザーの質問に関連する以下の情報を参考に回答してください:\n\n${contextText}`
+      }
     ];
 
     // 会話履歴を追加（最新5件まで）
@@ -121,8 +144,8 @@ app.post('/api/chat', async (req, res) => {
     const data = await openaiResponse.json();
     const answer = data.choices[0].message.content;
 
-    // ソース情報を抽出
-    const sources = extractSources(answer);
+    // ソース情報を抽出 (RAGの結果も含める)
+    const sources = extractSources(answer, searchResults);
 
     console.log(`[API] Response generated successfully`);
 
@@ -147,10 +170,27 @@ app.post('/api/chat', async (req, res) => {
 /**
  * 回答からソース情報を抽出
  */
-function extractSources(answer) {
+function extractSources(answer, searchResults = []) {
   const sources = [];
 
-  // 国税庁への言及を検出
+  // RAGの検索結果からソースを追加
+  if (searchResults && searchResults.length > 0) {
+    // 重複を除去して追加
+    const uniquePdfs = new Set();
+    searchResults.forEach(result => {
+      if (!uniquePdfs.has(result.pdf_name)) {
+        uniquePdfs.add(result.pdf_name);
+        sources.push({
+          title: result.pdf_name,
+          page: result.page_number,
+          similarity: result.similarity,
+          type: 'knowledge_base'
+        });
+      }
+    });
+  }
+
+  // 国税庁への言及を検出 (既存ロジック)
   if (answer.includes('国税庁') || answer.includes('年末調整のしかた')) {
     sources.push({
       title: '年末調整のしかた（令和6年分）',

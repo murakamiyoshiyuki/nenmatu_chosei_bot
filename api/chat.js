@@ -1,20 +1,13 @@
-/**
- * Vercel Edge Function - OpenAI API プロキシ + RAG統合
- *
- * このエンドポイントはフロントエンドからのリクエストを受け取り、
- * サーバーサイドでOpenAI APIを呼び出します（CORS回避 + APIキー保護）
- *
- * RAG機能：
- * - ユーザーの質問をベクトル検索
- * - Supabase Vector DBから関連PDFチャンクを取得
- * - システムプロンプトに検索結果を追加して回答精度を向上
- */
-
+// TEMPORARY: RAG検索を一時的に無効化して問題を切り分け
 import { searchKnowledge } from '../lib/vector-search.js';
 
-export const config = {
-  runtime: 'edge',
-};
+// Gemini SDKをインポート (Node.js環境で使用)
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Edge Runtimeを無効化 → 通常のNode.js Serverless Functionとして動作
+// export const config = {
+//   runtime: 'edge',
+// };
 
 // システムプロンプト（年末調整専門コンサルタント）
 const SYSTEM_PROMPT = `あなたは「日本の年末調整専門コンサルタントAI」です。
@@ -101,12 +94,13 @@ export default async function handler(req) {
       );
     }
 
-    // 環境変数からAPIキーとモデルを取得
-    const apiKey = process.env.OPENAI_API_KEY;
-    const model = process.env.OPENAI_MODEL || 'gpt-4o-mini'; // デフォルトは gpt-4o-mini
+    // 環境変数からAPIキーを取得
+    const apiKey = process.env.GEMINI_API_KEY;
+    // タイムアウト回避のため、Flashモデル（最速）を使用
+    const modelName = 'gemini-1.5-flash';
 
     if (!apiKey) {
-      console.error('OPENAI_API_KEY not configured');
+      console.error('GEMINI_API_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
         {
@@ -117,6 +111,7 @@ export default async function handler(req) {
     }
 
     // RAG検索: ナレッジベースから関連情報を取得
+    // 3秒でタイムアウトするようにlib/vector-search.js側で制御済み
     let searchResults = [];
     try {
       console.log('[RAG] Searching knowledge base...');
@@ -127,8 +122,8 @@ export default async function handler(req) {
       // RAG検索失敗時もエラーにせず、通常の回答を続行
     }
 
-    // システムプロンプトを拡張（RAG検索結果を追加）
-    let enhancedPrompt = SYSTEM_PROMPT;
+    // システムプロンプトを構築
+    let systemInstructionText = SYSTEM_PROMPT;
 
     if (searchResults.length > 0) {
       const knowledgeContext = searchResults.map((result, index) => {
@@ -137,7 +132,7 @@ export default async function handler(req) {
 類似度: ${(result.similarity * 100).toFixed(1)}%`;
       }).join('\n\n');
 
-      enhancedPrompt = `${SYSTEM_PROMPT}
+      systemInstructionText = `${SYSTEM_PROMPT}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【検索されたPDF資料（最優先で参照すること）】
@@ -151,80 +146,79 @@ ${knowledgeContext}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
     }
 
-    // メッセージ履歴を構築
-    const messages = [
-      { role: 'system', content: enhancedPrompt }
-    ];
+    console.log(`[Gemini API] Calling model: ${modelName} (SDKストリーミング版)`);
 
-    // 会話履歴を追加（最新5件まで）
+    // Gemini SDKを初期化
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      systemInstruction: systemInstructionText,
+    });
+
+    // 会話履歴を構築
+    const chatHistory = [];
     if (conversationHistory && conversationHistory.length > 0) {
       const recentHistory = conversationHistory.slice(-5);
       recentHistory.forEach(item => {
-        messages.push({ role: 'user', content: item.question });
-        messages.push({ role: 'assistant', content: item.answer });
+        chatHistory.push({ role: 'user', parts: [{ text: item.question }] });
+        chatHistory.push({ role: 'model', parts: [{ text: item.answer }] });
       });
     }
 
-    // 現在の質問を追加
-    messages.push({ role: 'user', content: message });
-
-    // OpenAI API呼び出し
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: messages,
+    // チャットセッションを開始
+    const chat = model.startChat({
+      history: chatHistory,
+      generationConfig: {
         temperature: 0.7,
-        max_tokens: 2000,
-        stream: false, // ストリーミングはオフ（シンプル実装）
-      }),
+        maxOutputTokens: 4000,
+      },
     });
 
-    if (!openaiResponse.ok) {
-      const errorData = await openaiResponse.json().catch(() => ({}));
-      console.error('OpenAI API error:', errorData);
+    // ストリーミングレスポンスを作成
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        const send = (data) => controller.enqueue(encoder.encode(JSON.stringify(data) + '\n'));
 
-      return new Response(
-        JSON.stringify({
-          error: 'AI service error',
-          details: errorData.error?.message || 'Unknown error',
-        }),
-        {
-          status: openaiResponse.status,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
+        try {
+          // 1. 最初のソース情報を送信 (RAG由来)
+          const initialSources = extractSources('', searchResults);
+          send({ type: 'sources', data: initialSources });
+
+          // 2. Gemini API ストリーミング呼び出し
+          const result = await chat.sendMessageStream(message);
+          let fullText = '';
+
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            if (chunkText) {
+              fullText += chunkText;
+              send({ type: 'chunk', text: chunkText });
+            }
+          }
+
+          // 3. 最終的なソース情報を送信 (回答内容に基づく追加ソースがあれば)
+          const finalSources = extractSources(fullText, searchResults);
+          send({ type: 'complete', sources: finalSources });
+
+          controller.close();
+        } catch (err) {
+          console.error('Stream processing error:', err);
+          send({ type: 'error', message: err.message });
+          controller.close();
         }
-      );
-    }
-
-    const data = await openaiResponse.json();
-    const answer = data.choices[0].message.content;
-
-    // ソース情報を抽出
-    const sources = extractSources(answer);
-
-    // レスポンスを返す
-    return new Response(
-      JSON.stringify({
-        answer: answer,
-        sources: sources,
-        usage: data.usage,
-        model: model,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
       }
-    );
+    });
+
+    // NDJSON形式でレスポンスを返す
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'application/x-ndjson',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+      },
+    });
 
   } catch (error) {
     console.error('Server error:', error);
@@ -248,24 +242,46 @@ ${knowledgeContext}
 /**
  * 回答からソース情報を抽出
  */
-function extractSources(answer) {
+function extractSources(answer, searchResults = []) {
   const sources = [];
+  const uniqueKeys = new Set();
 
-  // 国税庁への言及を検出
-  if (answer.includes('国税庁') || answer.includes('年末調整のしかた')) {
-    sources.push({
-      title: '年末調整のしかた（令和6年分）',
-      url: 'https://www.nta.go.jp/publication/pamph/gensen/nencho2025/pdf/nencho_all.pdf',
-      type: 'official'
+  // RAGの検索結果からソースを追加
+  if (searchResults && searchResults.length > 0) {
+    searchResults.forEach(result => {
+      const key = `${result.pdf_name}-${result.page_number}`;
+      if (!uniqueKeys.has(key)) {
+        uniqueKeys.add(key);
+        sources.push({
+          title: result.pdf_name,
+          page: result.page_number,
+          similarity: result.similarity,
+          type: 'knowledge_base'
+        });
+      }
     });
   }
 
-  if (answer.includes('Q&A') || answer.includes('よくある質問')) {
-    sources.push({
-      title: '年末調整Q&A',
-      url: 'https://www.nta.go.jp/publication/pamph/gensen/nencho2025/pdf/207.pdf',
-      type: 'official'
-    });
+  // 回答テキストがある場合のみ、追加のソース検出を行う
+  if (answer) {
+    // 国税庁への言及を検出
+    if ((answer.includes('国税庁') || answer.includes('年末調整のしかた')) && !uniqueKeys.has('official-nencho')) {
+      uniqueKeys.add('official-nencho');
+      sources.push({
+        title: '年末調整のしかた（令和6年分）',
+        url: 'https://www.nta.go.jp/publication/pamph/gensen/nencho2025/pdf/nencho_all.pdf',
+        type: 'official'
+      });
+    }
+
+    if ((answer.includes('Q&A') || answer.includes('よくある質問')) && !uniqueKeys.has('official-qa')) {
+      uniqueKeys.add('official-qa');
+      sources.push({
+        title: '年末調整Q&A',
+        url: 'https://www.nta.go.jp/publication/pamph/gensen/nencho2025/pdf/207.pdf',
+        type: 'official'
+      });
+    }
   }
 
   return sources;

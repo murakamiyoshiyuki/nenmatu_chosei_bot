@@ -135,16 +135,31 @@ async function handleSubmit(e) {
     addMessageToChat('user', question);
 
     // ローディング表示
-    const loadingId = addLoadingIndicator();
+    let loadingId = addLoadingIndicator();
+    let assistantMessageId = null;
 
-    // AI回答を取得
-    const response = await getAIResponse(question, conversationHistory);
+    // AI回答を取得（ストリーミング）
+    const response = await getAIResponse(question, conversationHistory, (partialText) => {
+      // 最初のチャンクが来たらローディングを消してメッセージ枠を作成
+      if (loadingId) {
+        removeLoadingIndicator(loadingId);
+        loadingId = null;
+        assistantMessageId = addMessageToChat('assistant', partialText);
+      } else if (assistantMessageId) {
+        // 既存のメッセージを更新
+        updateMessageContent(assistantMessageId, partialText);
+      }
+    });
 
-    // ローディングを削除
-    removeLoadingIndicator(loadingId);
+    // まだローディングが残っていたら消す（エラー時など）
+    if (loadingId) {
+      removeLoadingIndicator(loadingId);
+    }
 
-    // AI回答を表示
-    addMessageToChat('assistant', response.answer);
+    // メッセージ枠がまだなければ作成（一括で返ってきた場合など）
+    if (!assistantMessageId) {
+      addMessageToChat('assistant', response.answer);
+    }
 
     // 会話履歴に追加
     conversationHistory.push({

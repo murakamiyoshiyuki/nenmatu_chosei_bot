@@ -73,6 +73,17 @@
       0%, 80%, 100% { transform: scale(0); }
       40% { transform: scale(1); }
     }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    .typing-cursor {
+      animation: blink 1s infinite;
+      color: #4f46e5;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body class="bg-gray-50">

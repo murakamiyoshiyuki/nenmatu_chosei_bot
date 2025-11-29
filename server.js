@@ -10,6 +10,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // ES Modulesで __dirname を使えるようにする
 const __filename = fileURLToPath(import.meta.url);
@@ -28,8 +29,6 @@ app.use(express.static(__dirname)); // 静的ファイル配信
 
 import { searchKnowledge } from './lib/vector-search.js';
 
-// ... (imports remain the same)
-
 // システムプロンプト（年末調整専門コンサルタント）
 const SYSTEM_PROMPT = `あなたは「日本の年末調整専門コンサルタントAI」です。
 
@@ -40,16 +39,16 @@ const SYSTEM_PROMPT = `あなたは「日本の年末調整専門コンサルタ
 - 不確実な情報は「仮説」や「要確認」と明記します
 
 【参照資料】
-- 年末調整のしかた（令和6年分）
+- 年末調整のしかた（令和7年分）
 - 年末調整Q&A（国税庁）
 - その他関連する税法・通達
 
 【回答スタイル】
-1. 質問の要点を確認
-2. 提供された「参考情報」がある場合は、それを優先的に使用して回答を構築
-3. 法的根拠と実務上の取り扱いを説明
-4. 具体例や注意点を補足
-5. 必要に応じて参照先を提示
+- 質問の要点を確認
+- 提供された「参考情報」がある場合は、それを優先的に使用して回答を構築
+- 法的根拠と実務上の取り扱いを説明
+- 具体例や注意点を補足
+- 必要に応じて参照先を提示
 
 【注意事項】
 - 税務相談は最終的に税理士・税務署への確認を推奨
@@ -69,11 +68,11 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // 環境変数からAPIキーとモデルを取得
-    const apiKey = process.env.OPENAI_API_KEY;
-    const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    const apiKey = process.env.GEMINI_API_KEY;
+    const model = process.env.GEMINI_MODEL || 'gemini-1.5-pro'; // より安定した1.5 Proを使用
 
     if (!apiKey) {
-      console.error('OPENAI_API_KEY not configured in .env');
+      console.error('GEMINI_API_KEY not configured in .env');
       return res.status(500).json({ error: 'Server configuration error: Missing API key' });
     }
 
@@ -85,75 +84,71 @@ app.post('/api/chat', async (req, res) => {
     const searchResults = await searchKnowledge(message);
     console.log(`[API] Found ${searchResults.length} relevant chunks`);
 
-    // 2. コンテキストの構築
-    let contextText = '';
+    // 2. システムプロンプト構築
+    let systemInstructionText = SYSTEM_PROMPT;
+
     if (searchResults.length > 0) {
-      contextText = searchResults.map((result, index) => {
-        return `--- 参考情報 ${index + 1} (信頼度: ${Math.round(result.similarity * 100)}%) ---\n出典: ${result.pdf_name} (p.${result.page_number})\n内容:\n${result.text}\n`;
-      }).join('\n');
-    } else {
-      contextText = '（関連する参考情報は見つかりませんでした。一般的な知識に基づいて回答してください。）';
+      const knowledgeContext = searchResults.map((result, index) => {
+        return `[${index + 1}] 📄 出典: ${result.pdf_name}${result.pdf_year ? ` (${result.pdf_year})` : ''} p.${result.page_number || '?'}付近
+内容: ${result.text.substring(0, 500)}${result.text.length > 500 ? '...' : ''}
+類似度: ${(result.similarity * 100).toFixed(1)}%`;
+      }).join('\n\n');
+
+      systemInstructionText = `${SYSTEM_PROMPT}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【検索されたPDF資料（最優先で参照すること）】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${knowledgeContext}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+上記の資料を最優先で参照して回答してください。
+回答には必ず「📄 引用：〜」の形式で出典を明記してください。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
     }
 
-    // 3. メッセージ履歴を構築
-    const messages = [
-      {
-        role: 'system',
-        content: `${SYSTEM_PROMPT}\n\n【参考情報】\nユーザーの質問に関連する以下の情報を参考に回答してください:\n\n${contextText}`
-      }
-    ];
+    // 3. Gemini API呼び出し (SDK使用)
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const geminiModel = genAI.getGenerativeModel({
+      model: model,
+      systemInstruction: systemInstructionText
+    });
 
-    // 会話履歴を追加（最新5件まで）
+    console.log(`[API] Calling Gemini API (SDK): ${model}`);
+
+    // SDKの形式に合わせて履歴を変換
+    const history = [];
     if (conversationHistory && conversationHistory.length > 0) {
       const recentHistory = conversationHistory.slice(-5);
       recentHistory.forEach(item => {
-        messages.push({ role: 'user', content: item.question });
-        messages.push({ role: 'assistant', content: item.answer });
+        history.push({ role: 'user', parts: [{ text: item.question }] });
+        history.push({ role: 'model', parts: [{ text: item.answer }] });
       });
     }
 
-    // 現在の質問を追加
-    messages.push({ role: 'user', content: message });
-
-    // OpenAI API呼び出し
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: messages,
+    const chatSession = geminiModel.startChat({
+      history: history,
+      generationConfig: {
         temperature: 0.7,
-        max_tokens: 2000,
-        stream: false,
-      }),
+        maxOutputTokens: 4000, // より長い回答を許可
+      },
     });
 
-    if (!openaiResponse.ok) {
-      const errorData = await openaiResponse.json().catch(() => ({}));
-      console.error('[API] OpenAI API error:', errorData);
-
-      return res.status(openaiResponse.status).json({
-        error: 'AI service error',
-        details: errorData.error?.message || 'Unknown error',
-      });
-    }
-
-    const data = await openaiResponse.json();
-    const answer = data.choices[0].message.content;
-
-    // ソース情報を抽出 (RAGの結果も含める)
-    const sources = extractSources(answer, searchResults);
+    const result = await chatSession.sendMessage(message);
+    const response = await result.response;
+    const answer = response.text();
 
     console.log(`[API] Response generated successfully`);
+
+    // ソース情報を抽出
+    const sources = extractSources(answer, searchResults);
 
     // レスポンスを返す
     res.json({
       answer: answer,
       sources: sources,
-      usage: data.usage,
+      usage: response.usageMetadata,
       model: model,
     });
 
@@ -193,7 +188,7 @@ function extractSources(answer, searchResults = []) {
   // 国税庁への言及を検出 (既存ロジック)
   if (answer.includes('国税庁') || answer.includes('年末調整のしかた')) {
     sources.push({
-      title: '年末調整のしかた（令和6年分）',
+      title: '年末調整のしかた（令和7年分）',
       url: 'https://www.nta.go.jp/publication/pamph/gensen/nencho2025/pdf/nencho_all.pdf',
       type: 'official'
     });
@@ -219,8 +214,9 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     env: {
       hasOpenAI: !!process.env.OPENAI_API_KEY,
+      hasGemini: !!process.env.GEMINI_API_KEY,
       hasSupabase: !!process.env.SUPABASE_URL,
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini (default)',
+      model: process.env.GEMINI_MODEL || 'gemini-1.5-pro (default)',
     }
   });
 });
@@ -232,8 +228,8 @@ app.listen(PORT, () => {
   console.log(`🔗 API Endpoint: http://localhost:${PORT}/api/chat`);
   console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
   console.log(`\n環境設定:`);
-  console.log(`  ✓ OpenAI API: ${process.env.OPENAI_API_KEY ? '設定済み' : '未設定'}`);
+  console.log(`  ✓ Gemini API: ${process.env.GEMINI_API_KEY ? '設定済み' : '未設定'}`);
   console.log(`  ✓ Supabase: ${process.env.SUPABASE_URL ? '設定済み' : '未設定'}`);
-  console.log(`  ✓ Model: ${process.env.OPENAI_MODEL || 'gpt-4o-mini (default)'}`);
+  console.log(`  ✓ Model: ${process.env.GEMINI_MODEL || 'gemini-1.5-pro (default)'}`);
   console.log(`\n開発を開始してください！\n`);
 });

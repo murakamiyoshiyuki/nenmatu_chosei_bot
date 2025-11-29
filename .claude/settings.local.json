@@ -16,7 +16,12 @@
       "Bash(ping:*)",
       "Bash(nul)",
       "Bash(taskkill /F /PID 58932)",
-      "Bash(taskkill //F //PID 58932)"
+      "Bash(taskkill //F //PID 58932)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(where:*)",
+      "Bash(vercel:*)"
     ],
     "deny": [],
     "ask": []

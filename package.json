@@ -17,6 +17,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@memberstack/dom": "^2.0.1",
     "@supabase/supabase-js": "^2.39.0",
     "cors": "^2.8.5",

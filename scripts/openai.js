@@ -9,10 +9,10 @@
 const API_ENDPOINT = '/api/chat';
 
 /**
- * AI回答を取得（ストリーミング対応版）
+ * AI回答を取得（非ストリーミング・最適化版）
  * @param {string} question - ユーザーの質問
  * @param {Array} conversationHistory - 会話履歴（オプション）
- * @param {Function} onStream - ストリーミング更新用コールバック (text) => void
+ * @param {Function} onStream - 未使用（互換性のため残す）
  * @returns {Promise<Object>} { answer: string, sources: Array }
  */
 async function getAIResponse(question, conversationHistory = [], onStream = null) {
@@ -41,50 +41,12 @@ async function getAIResponse(question, conversationHistory = [], onStream = null
       throw new Error(errorData.details || errorData.error || `HTTP ${response.status}`);
     }
 
-    // ストリーミングレスポンスの処理
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let fullAnswer = '';
-    let sources = [];
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      // 最後の行は不完全な可能性があるためバッファに残す
-      buffer = lines.pop();
-
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const data = JSON.parse(line);
-
-          if (data.type === 'chunk') {
-            fullAnswer += data.text;
-            if (onStream) {
-              onStream(fullAnswer);
-            }
-          } else if (data.type === 'sources') {
-            sources = data.data;
-          } else if (data.type === 'complete') {
-            if (data.sources) {
-              sources = data.sources;
-            }
-          } else if (data.type === 'error') {
-            throw new Error(data.message);
-          }
-        } catch (e) {
-          console.warn('JSON parse error:', e);
-        }
-      }
-    }
+    // 非ストリーミング: 通常のJSONレスポンスを取得
+    const data = await response.json();
 
     return {
-      answer: fullAnswer,
-      sources: sources,
+      answer: data.answer,
+      sources: data.sources || [],
       model: 'gemini-1.5-flash'
     };
 

@@ -146,7 +146,7 @@ ${knowledgeContext}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
     }
 
-    console.log(`[Gemini API] Calling model: ${modelName} (SDKストリーミング版)`);
+    console.log(`[Gemini API] Calling model: ${modelName} (SDK非ストリーミング版)`);
 
     // Gemini SDKを初期化
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -174,51 +174,30 @@ ${knowledgeContext}
       },
     });
 
-    // ストリーミングレスポンスを作成
-    const stream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-        const send = (data) => controller.enqueue(encoder.encode(JSON.stringify(data) + '\n'));
+    // メッセージを送信して応答を取得
+    const result = await chat.sendMessage(message);
+    const response = await result.response;
+    const answer = response.text();
 
-        try {
-          // 1. 最初のソース情報を送信 (RAG由来)
-          const initialSources = extractSources('', searchResults);
-          send({ type: 'sources', data: initialSources });
+    console.log(`[Gemini API] Response received: ${answer.substring(0, 100)}...`);
 
-          // 2. Gemini API ストリーミング呼び出し
-          const result = await chat.sendMessageStream(message);
-          let fullText = '';
+    // ソース情報を抽出
+    const sources = extractSources(answer, searchResults);
 
-          for await (const chunk of result.stream) {
-            const chunkText = chunk.text();
-            if (chunkText) {
-              fullText += chunkText;
-              send({ type: 'chunk', text: chunkText });
-            }
-          }
-
-          // 3. 最終的なソース情報を送信 (回答内容に基づく追加ソースがあれば)
-          const finalSources = extractSources(fullText, searchResults);
-          send({ type: 'complete', sources: finalSources });
-
-          controller.close();
-        } catch (err) {
-          console.error('Stream processing error:', err);
-          send({ type: 'error', message: err.message });
-          controller.close();
-        }
+    // レスポンスを返す
+    return new Response(
+      JSON.stringify({
+        answer: answer,
+        sources: sources,
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       }
-    });
-
-    // NDJSON形式でレスポンスを返す
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'application/x-ndjson',
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive',
-      },
-    });
+    );
 
   } catch (error) {
     console.error('Server error:', error);

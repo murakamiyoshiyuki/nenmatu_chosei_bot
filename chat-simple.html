@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,9 +10,18 @@
   <script src="./config.js"></script>
   <style>
     @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
+
+      0%,
+      50% {
+        opacity: 1;
+      }
+
+      51%,
+      100% {
+        opacity: 0;
+      }
     }
+
     .typing-cursor {
       animation: blink 1s infinite;
       color: #4f46e5;
@@ -19,6 +29,7 @@
     }
   </style>
 </head>
+
 <body class="bg-gray-50">
 
   <header class="bg-white shadow-sm border-b border-gray-200">
@@ -39,17 +50,11 @@
 
       <div class="border-t border-gray-200 p-4 bg-gray-50">
         <div class="flex items-end space-x-3">
-          <textarea
-            id="questionInput"
-            rows="2"
-            placeholder="年末調整について質問を入力..."
+          <textarea id="questionInput" rows="2" placeholder="年末調整について質問を入力..."
             class="flex-1 px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 outline-none"
-            maxlength="1000"
-          ></textarea>
-          <button
-            id="sendButton"
-            class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700"
-          >
+            maxlength="1000"></textarea>
+          <button id="sendButton"
+            class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">
             送信
           </button>
         </div>
@@ -175,7 +180,7 @@
             try {
               const data = JSON.parse(line);
 
-              if (data.type === 'content') {
+              if (data.type === 'chunk') {
                 // テキストを追加
                 fullAnswer += data.text;
                 updateAssistantMessage(messageElement, fullAnswer);
@@ -219,11 +224,10 @@
       div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
 
       const bubble = document.createElement('div');
-      bubble.className = `max-w-xl px-4 py-3 rounded-2xl ${
-        role === 'user'
+      bubble.className = `max-w-xl px-4 py-3 rounded-2xl ${role === 'user'
           ? 'bg-indigo-600 text-white'
           : 'bg-gray-100 text-gray-800'
-      }`;
+        }`;
       bubble.innerHTML = `
         <div class="text-xs font-semibold mb-1 ${role === 'user' ? 'text-indigo-200' : 'text-gray-600'}">
           ${role === 'user' ? 'あなた' : 'AI アシスタント'}
@@ -291,4 +295,5 @@
   </script>
 
 </body>
+
 </html>
